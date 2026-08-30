@@ -16,6 +16,27 @@ NVR (gravador de câmeras) com detecção de objetos por IA, rodando como uma
 | 8554  | RTSP restream (go2rtc) |
 | 8555  | WebRTC (ao vivo) |
 
+## Consumo de recursos — com TETO definido (você decide)
+
+O container tem **limite rígido** de memória e CPU no `docker-compose.yml`. Ele
+**nunca** passa disso — não é "poço sem fundo". Ajuste os números conforme o
+número de câmeras:
+
+| Câmeras | RAM típica | Sugestão `mem_limit` | Sugestão `cpus` |
+|---------|-----------|----------------------|-----------------|
+| 1–2     | ~0,8–1,3 GB | `1.5g`             | `1.0`           |
+| 3–4     | ~1,3–2 GB   | `2g` (padrão)      | `2.0`           |
+| 5–8     | ~2–3,5 GB   | `3g`–`4g`          | `2.0`–`3.0`     |
+
+O que ocupa memória: o processo do Frigate + **um ffmpeg por câmera** (decodifica
+o vídeo) + `shm_size` (frames) + o cache em RAM (`tmpfs`, hoje **256 MB**).
+
+Onde mudar, no `docker-compose.yml`:
+- `mem_limit` → teto de RAM (o Docker segura o container aqui)
+- `cpus` → máximo de núcleos
+- `shm_size` → `128mb` p/ 1–2 câmeras, `256mb` p/ ~4
+- o `tmpfs size` → cache de gravação em RAM (só aumente se der "cache cheio")
+
 ## Detecção na CPU (a GPU fica livre)
 
 Seu painel avisa que a GPU de 16GB roda **uma IA pesada por vez**. Como o Frigate

@@ -19,10 +19,20 @@ services:
     image: ghcr.io/blakeblackshear/frigate:0.14.1
     restart: unless-stopped
 
-    # shm_size mínimo depende do nº de câmeras e resolução.
-    # Regra: ~ (largura*altura*1.5*9 + 270480) / 1048576 por câmera, arredonde pra cima.
-    # 256mb cobre ~4 câmeras 1080p com folga. Aumente se tiver muitas câmeras.
-    shm_size: "256mb"
+    # =========================================================================
+    # TETO DE RECURSOS — VOCÊ decide o máximo. O container NUNCA passa disto.
+    # -------------------------------------------------------------------------
+    # mem_limit: se o Frigate tentar usar mais que isto, o Docker o segura
+    #   (e mata/reinicia se estourar). É a garantia de que não vira "poço sem fundo".
+    # Ajuste conforme o nº de câmeras (veja a tabela no README):
+    #   1-2 câmeras -> 1.5g  |  3-4 câmeras -> 2g  |  mais -> aumente aos poucos.
+    mem_limit: 2g
+    mem_reservation: 512m     # memória "garantida" mínima
+    cpus: 2.0                 # no máximo 2 núcleos de CPU (use 1.0 se quiser segurar mais)
+
+    # shm = memória compartilhada dos frames das câmeras. NÃO é "extra" sem limite:
+    # é um valor fixo. 128mb cobre 1-2 câmeras; 256mb cobre ~4 câmeras 1080p.
+    shm_size: "128mb"
 
     # -------------------------------------------------------------------------
     # GPU Nvidia — DESATIVADA por padrão (recomendado no seu caso).
@@ -53,11 +63,13 @@ services:
       # Esquerda = pasta no servidor/NAS | Direita = dentro do container (não mude)
       - /mnt/nas/frigate:/media/frigate
       - /etc/localtime:/etc/localtime:ro
-      # Cache em RAM pra reduzir escrita em disco:
+      # Cache em RAM pros trechos de gravação (antes de irem pro NAS).
+      # ISTO é RAM. Estava em 1 GB (exagerado) — reduzi pra 256 MB, que basta
+      # pra poucas câmeras. Só aumente se aparecer erro de "cache cheio" no log.
       - type: tmpfs
         target: /tmp/cache
         tmpfs:
-          size: 1000000000  # 1 GB
+          size: 268435456   # 256 MB
 
     env_file:
       - .env
