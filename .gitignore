@@ -1,0 +1,8 @@
+# Segredos — nunca versionar
+**/.env
+
+# Dados/gravações do Frigate (ficam no NAS, não no git)
+frigate/media/
+frigate/storage/
+frigate/config/*.db
+frigate/config/*.db-*

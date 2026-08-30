@@ -1,0 +1,63 @@
+# =============================================================================
+# Frigate NVR — STACK ISOLADA
+# -----------------------------------------------------------------------------
+# Esta stack roda de forma independente do restante do seu Docker.
+# Suba/derrube SÓ o Frigate assim (de dentro da pasta frigate/):
+#     docker compose up -d
+#     docker compose down
+#     docker compose logs -f
+#
+# Nada aqui interfere nos seus outros serviços (Open WebUI, Loja, etc.).
+# Portas usadas aqui (8971 / 8554 / 8555) NÃO conflitam com as que você já usa.
+# =============================================================================
+
+name: frigate
+
+services:
+  frigate:
+    container_name: frigate
+    image: ghcr.io/blakeblackshear/frigate:0.14.1
+    restart: unless-stopped
+
+    # shm_size mínimo depende do nº de câmeras e resolução.
+    # Regra: ~ (largura*altura*1.5*9 + 270480) / 1048576 por câmera, arredonde pra cima.
+    # 256mb cobre ~4 câmeras 1080p com folga. Aumente se tiver muitas câmeras.
+    shm_size: "256mb"
+
+    # -------------------------------------------------------------------------
+    # GPU Nvidia — DESATIVADA por padrão (recomendado no seu caso).
+    # Sua GPU de 16GB "roda uma IA pesada por vez"; o Frigate roda 24/7, então
+    # por padrão ele NÃO toca na GPU (detecção e decodificação na CPU).
+    #
+    # Descomente o bloco abaixo SÓ se quiser usar a GPU pra DECODIFICAR vídeo
+    # (ainda assim, veja hwaccel_args no config.yml). Requer nvidia-container-toolkit.
+    # -------------------------------------------------------------------------
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+    ports:
+      - "8971:8971"       # Interface web COM login  ->  http://192.168.15.11:8971
+      # - "5000:5000"     # Interface interna SEM login — NÃO exponha na rede
+      - "8554:8554"       # RTSP restream (go2rtc)
+      - "8555:8555/tcp"   # WebRTC (áudio/vídeo ao vivo, TCP)
+      - "8555:8555/udp"   # WebRTC (áudio/vídeo ao vivo, UDP)
+
+    volumes:
+      - ./config:/config
+      # >>> AJUSTE este caminho pro seu NAS <<<
+      # Esquerda = pasta no servidor/NAS | Direita = dentro do container (não mude)
+      - /mnt/nas/frigate:/media/frigate
+      - /etc/localtime:/etc/localtime:ro
+      # Cache em RAM pra reduzir escrita em disco:
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000  # 1 GB
+
+    env_file:
+      - .env
