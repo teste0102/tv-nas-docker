@@ -59,9 +59,10 @@ services:
 
     volumes:
       - ./config:/config
-      # >>> AJUSTE este caminho pro seu NAS <<<
-      # Esquerda = pasta no servidor/NAS | Direita = dentro do container (não mude)
-      - /mnt/nas/frigate:/media/frigate
+      # Pasta de gravação. Vem da variável FRIGATE_STORAGE no .env.
+      # Se não definir nada, usa ./storage (pasta local, boa pra TESTAR a interface).
+      # Depois, pra gravar no NAS, é só definir FRIGATE_STORAGE=/mnt/nas/frigate no .env.
+      - ${FRIGATE_STORAGE:-./storage}:/media/frigate
       - /etc/localtime:/etc/localtime:ro
       # Cache em RAM pros trechos de gravação (antes de irem pro NAS).
       # ISTO é RAM. Estava em 1 GB (exagerado) — reduzi pra 256 MB, que basta
