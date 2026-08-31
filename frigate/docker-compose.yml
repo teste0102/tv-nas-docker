@@ -16,8 +16,11 @@ name: frigate
 services:
   frigate:
     container_name: frigate
-    image: ghcr.io/blakeblackshear/frigate:stable-tensorrt
+    image: ghcr.io/blakeblackshear/frigate:0.18.0-rc1-tensorrt
     restart: unless-stopped
+    # 0.18 traz o CUDA novo (12.8+) que a GPU Blackwell (RTX 5060 Ti) precisa.
+    # A 0.17 (stable) travava a detecção nessa placa. Voltar p/ 0.17: use
+    # ghcr.io/blakeblackshear/frigate:stable-tensorrt (mas a detecção GPU não roda).
 
     # =========================================================================
     # TETO DE RECURSOS — VOCÊ decide o máximo. O container NUNCA passa disto.
