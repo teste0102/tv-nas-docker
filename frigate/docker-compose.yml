@@ -27,8 +27,8 @@ services:
     # Ajuste conforme o nº de câmeras (veja a tabela no README):
     #   1-2 câmeras -> 1.5g  |  3-4 câmeras -> 2g  |  mais -> aumente aos poucos.
     mem_limit: 4g             # imagem -tensorrt + runtime CUDA usa mais RAM
-    mem_reservation: 1g
     cpus: 4.0                 # detecção agora é na GPU; a CPU só decodifica/grava
+    # (sem mem_reservation: conflita com o bloco "deploy" da GPU)
 
     # shm = memória compartilhada dos frames das câmeras. NÃO é "extra" sem limite:
     # é um valor fixo. 128mb cobre 1-2 câmeras; 256mb cobre ~4 câmeras.
