@@ -51,7 +51,7 @@ services:
     #           capabilities: [gpu]
 
     ports:
-      - "8971:8971"       # Interface web COM login  ->  http://192.168.15.11:8971
+      - "8971:8971"       # Interface web COM login  ->  https://192.168.15.11:8971
       # - "5000:5000"     # Interface interna SEM login — NÃO exponha na rede
       - "8554:8554"       # RTSP restream (go2rtc)
       - "8555:8555/tcp"   # WebRTC (áudio/vídeo ao vivo, TCP)
