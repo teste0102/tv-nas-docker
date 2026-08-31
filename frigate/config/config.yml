@@ -12,23 +12,28 @@ mqtt:
   enabled: false   # ligue depois se for integrar com Home Assistant
 
 # -----------------------------------------------------------------------------
-# DETECÇÃO — na CPU (não usa a GPU de 16GB, que fica livre pras suas outras IAs)
-# Se um dia comprar um Google Coral, troque este bloco por:
-#   detectors:
-#     coral:
-#       type: edgetpu
-#       device: usb
+# DETECÇÃO NA GPU (Nvidia RTX 5060 Ti) — detector ONNX (usa TensorRT na placa).
+# A análise cai de ~140ms (CPU) pra ~5-10ms. A GPU é compartilhada com o
+# Assistente/ComfyUI (VRAM do modelo ~1-2 GB).
 # -----------------------------------------------------------------------------
 detectors:
-  cpu1:
-    type: cpu
-    num_threads: 3
+  onnx:
+    type: onnx
+
+# Modelo YOLOv9-t 320. O arquivo .onnx é gerado no servidor (veja o README:
+# "Gerar o modelo YOLO pra GPU"). Sem ele, o Frigate não sobe a detecção.
+model:
+  model_type: yolo-generic
+  width: 320
+  height: 320
+  input_tensor: nchw
+  input_dtype: float
+  path: /config/model_cache/yolov9-t-320.onnx
+  labelmap_path: /labelmap/coco-80.txt
 
 ffmpeg:
-  # DECODIFICAÇÃO na CPU por padrão (não toca na GPU).
-  # Pra usar a GPU Nvidia só pra decodificar vídeo, descomente a linha abaixo
-  # E descomente o bloco "deploy" no docker-compose.yml:
-  # hwaccel_args: preset-nvidia
+  # DECODIFICAÇÃO na GPU (NVDEC) — tira o decode de vídeo da CPU.
+  hwaccel_args: preset-nvidia
   output_args:
     # O áudio da câmera vem em PCM a-law; converte pra AAC (senão o MP4 da
     # gravação pode não tocar/gravar direito).
@@ -66,12 +71,14 @@ go2rtc:
 record:
   enabled: true
   retain:
-    days: 3          # gravação contínua: 3 dias (aumenta/diminui conforme o NAS)
-    mode: motion     # só guarda trechos com movimento (economiza MUITO espaço)
-  events:
+    days: 3          # gravação contínua (só trechos com movimento): 3 dias
+    mode: motion
+  alerts:
     retain:
-      default: 14    # clipes de eventos (pessoa, carro...): 14 dias
-      mode: motion
+      days: 14       # alertas (pessoa/carro): 14 dias
+  detections:
+    retain:
+      days: 14       # demais detecções: 14 dias
 
 snapshots:
   enabled: true
@@ -132,6 +139,3 @@ cameras:
   # Cada câmera CareCam nova: descubra o IP dela, rode o mesmo processo ONVIF
   # pra achar o /streamtype=0 e /streamtype=1, e replique este bloco aqui +
   # os streams lá em cima no go2rtc (ex.: loja5 / loja5_sub).
-
-# Versão do formato de config (não mexa):
-version: 0.14

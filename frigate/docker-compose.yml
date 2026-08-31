@@ -16,7 +16,7 @@ name: frigate
 services:
   frigate:
     container_name: frigate
-    image: ghcr.io/blakeblackshear/frigate:0.14.1
+    image: ghcr.io/blakeblackshear/frigate:stable-tensorrt
     restart: unless-stopped
 
     # =========================================================================
@@ -26,29 +26,26 @@ services:
     #   (e mata/reinicia se estourar). É a garantia de que não vira "poço sem fundo".
     # Ajuste conforme o nº de câmeras (veja a tabela no README):
     #   1-2 câmeras -> 1.5g  |  3-4 câmeras -> 2g  |  mais -> aumente aos poucos.
-    mem_limit: 2g
-    mem_reservation: 512m     # memória "garantida" mínima
-    cpus: 2.0                 # no máximo 2 núcleos de CPU (use 1.0 se quiser segurar mais)
+    mem_limit: 4g             # imagem -tensorrt + runtime CUDA usa mais RAM
+    mem_reservation: 1g
+    cpus: 4.0                 # detecção agora é na GPU; a CPU só decodifica/grava
 
     # shm = memória compartilhada dos frames das câmeras. NÃO é "extra" sem limite:
-    # é um valor fixo. 128mb cobre 1-2 câmeras; 256mb cobre ~4 câmeras 1080p.
-    shm_size: "128mb"
+    # é um valor fixo. 128mb cobre 1-2 câmeras; 256mb cobre ~4 câmeras.
+    shm_size: "256mb"
 
     # -------------------------------------------------------------------------
-    # GPU Nvidia — DESATIVADA por padrão (recomendado no seu caso).
-    # Sua GPU de 16GB "roda uma IA pesada por vez"; o Frigate roda 24/7, então
-    # por padrão ele NÃO toca na GPU (detecção e decodificação na CPU).
-    #
-    # Descomente o bloco abaixo SÓ se quiser usar a GPU pra DECODIFICAR vídeo
-    # (ainda assim, veja hwaccel_args no config.yml). Requer nvidia-container-toolkit.
+    # GPU Nvidia (RTX 5060 Ti) — LIGADA.
+    # Detecção ONNX/TensorRT + decodificação NVDEC rodam na placa.
+    # Requer nvidia-container-toolkit (já instalado no servidor).
     # -------------------------------------------------------------------------
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
     ports:
       - "8971:8971"       # Interface web COM login  ->  https://192.168.15.11:8971

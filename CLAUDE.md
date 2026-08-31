@@ -46,9 +46,16 @@ Serviços em Docker:
 
 ### frigate/ — Frigate NVR (câmeras)
 - Stack isolada. Portas: **8971** (web c/ login), **8554** (RTSP), **8555** (WebRTC) — sem conflito.
-- **Detecção na CPU** (GPU deixada livre pras outras IAs). Bloco de GPU pronto mas desligado.
-- **Limites de recurso definidos:** `mem_limit: 2g`, `cpus: 2.0`, `shm_size: 128mb`, cache tmpfs 256 MB.
+- **Frigate 0.17 imagem `-tensorrt`.** Atualizado da 0.14.1 pra suportar a GPU Blackwell.
+- **Detecção na GPU** (RTX 5060 Ti): detector **ONNX** + modelo **YOLOv9-t 320**
+  (`config/model_cache/yolov9-t-320.onnx`, gerado no servidor — não vai pro git).
+  Decode de vídeo na GPU (`hwaccel_args: preset-nvidia`). VRAM ~1-2 GB.
+- GPU compartilhada com o Assistente (ollama ~5,4 GB + python ~2,7 GB); ~8 GB livres.
+  Cuidado ao ligar ComfyUI junto (ele quer a placa quase toda).
+- Driver do servidor: **595.84 / CUDA 13.2** (suporta Blackwell).
+- **Limites:** `mem_limit: 4g`, `cpus: 4.0`, `shm_size: 256mb`, cache tmpfs 256 MB.
 - Gravação → variável `FRIGATE_STORAGE` no `.env` (padrão `./storage` local; setar pro NAS depois).
+- Formato de gravação 0.17: `record.retain` + `record.alerts` + `record.detections`.
 
 ### Câmeras — CareCam Pro (marca HMT, WiFi P2P)
 - **App:** CareCam Pro. Firmware `HMT.CM2307`. Várias câmeras (Loja, Loja 5, Loja 2...).

@@ -6,3 +6,6 @@ frigate/media/
 frigate/storage/
 frigate/config/*.db
 frigate/config/*.db-*
+
+# Modelos de IA e cache do Frigate (binários grandes; gerados no servidor)
+frigate/config/model_cache/

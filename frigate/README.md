@@ -37,7 +37,44 @@ Onde mudar, no `docker-compose.yml`:
 - `shm_size` → `128mb` p/ 1–2 câmeras, `256mb` p/ ~4
 - o `tmpfs size` → cache de gravação em RAM (só aumente se der "cache cheio")
 
-## Detecção na CPU (a GPU fica livre)
+## Detecção na GPU (RTX 5060 Ti) — gerar o modelo YOLO
+
+A detecção roda na GPU via detector **ONNX** (TensorRT), usando o modelo
+**YOLOv9-t 320**. O Frigate 0.17 não traz modelo pronto — é gerado uma vez no
+servidor. Rode (leva alguns minutos, baixa dependências):
+
+```bash
+mkdir -p ~/tv-nas-docker/frigate/config/model_cache
+cd ~/tv-nas-docker/frigate/config/model_cache
+docker build . --build-arg MODEL_SIZE=t --build-arg IMG_SIZE=320 --output . -f- <<'EOF'
+FROM python:3.11 AS build
+RUN apt-get update && apt-get install --no-install-recommends -y cmake libgl1 && rm -rf /var/lib/apt/lists/*
+COPY --from=ghcr.io/astral-sh/uv:0.10.4 /uv /bin/
+WORKDIR /yolov9
+ADD https://github.com/WongKinYiu/yolov9.git .
+RUN uv pip install --system -r requirements.txt
+RUN uv pip install --system onnx==1.18.0 onnxruntime onnx-simplifier==0.4.* onnxscript
+ARG MODEL_SIZE
+ARG IMG_SIZE
+ADD https://github.com/WongKinYiu/yolov9/releases/download/v0.1/yolov9-${MODEL_SIZE}-converted.pt yolov9-${MODEL_SIZE}.pt
+RUN sed -i "s/ckpt = torch.load(attempt_download(w), map_location='cpu')/ckpt = torch.load(attempt_download(w), map_location='cpu', weights_only=False)/g" models/experimental.py
+RUN python3 export.py --weights ./yolov9-${MODEL_SIZE}.pt --imgsz ${IMG_SIZE} --simplify --include onnx
+FROM scratch
+ARG MODEL_SIZE
+ARG IMG_SIZE
+COPY --from=build /yolov9/yolov9-${MODEL_SIZE}.onnx /yolov9-${MODEL_SIZE}-${IMG_SIZE}.onnx
+EOF
+```
+
+Isso gera `yolov9-t-320.onnx` em `config/model_cache/` — o caminho que o
+`config.yml` aponta em `model: -> path`. Na primeira vez que o Frigate subir, o
+TensorRT compila o modelo pra placa (demora alguns minutos no 1º boot — normal).
+
+> Voltar pra **detecção na CPU**: no `docker-compose.yml` volte a imagem pra
+> `:0.14.1` e remova o bloco `deploy`; no `config.yml` troque o detector por
+> `cpu1: {type: cpu}`. (Ou `git checkout` do commit anterior.)
+
+## Detecção na CPU (opção antiga — GPU livre)
 
 Seu painel avisa que a GPU de 16GB roda **uma IA pesada por vez**. Como o Frigate
 roda 24/7, ele está configurado pra detectar objetos **na CPU**, deixando a GPU
