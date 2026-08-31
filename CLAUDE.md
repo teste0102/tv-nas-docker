@@ -46,7 +46,9 @@ Serviços em Docker:
 
 ### frigate/ — Frigate NVR (câmeras)
 - Stack isolada. Portas: **8971** (web c/ login), **8554** (RTSP), **8555** (WebRTC) — sem conflito.
-- **Frigate 0.17 imagem `-tensorrt`.** Atualizado da 0.14.1 pra suportar a GPU Blackwell.
+- **Frigate 0.18.0-rc1 imagem `-tensorrt`.** A 0.17 travava a detecção na Blackwell
+  (CUDA 12.x vs. 12.8+ exigido); suporte oficial à série 50 só na 0.18. Voltar p/ estável
+  quando a 0.18 sair final. Detector faz "warm up" (~80s) no 1º boot — normal, não é trava.
 - **Detecção na GPU** (RTX 5060 Ti): detector **ONNX** + modelo **YOLOv9-t 320**
   (`config/model_cache/yolov9-t-320.onnx`, gerado no servidor — não vai pro git).
   Decode de vídeo na GPU (`hwaccel_args: preset-nvidia`). VRAM ~1-2 GB.
