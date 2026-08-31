@@ -47,6 +47,10 @@ go2rtc:
       - "rtsp://admin:@192.168.15.12:554/streamtype=0"
     loja_sub:                   # substream: 640x360, H.265     -> detecção (leve)
       - "rtsp://admin:@192.168.15.12:554/streamtype=1"
+    loja_sub_h264:              # substream convertido p/ H.264  -> só pra ver AO VIVO
+      # A câmera não deixa trocar p/ H.264. Como o Chrome/Edge não tocam H.265,
+      # o go2rtc converte só o substream (640x360, leve na CPU) só pra exibição.
+      - "ffmpeg:loja_sub#video=h264"
 
 # -----------------------------------------------------------------------------
 # Padrões aplicados a TODAS as câmeras (pode sobrescrever por câmera)
@@ -92,6 +96,9 @@ cameras:
       width: 640      # resolução do substream (streamtype=1)
       height: 360
       fps: 5
+    live:
+      # usa o substream convertido p/ H.264 na visualização ao vivo (Chrome/Edge)
+      stream_name: loja_sub_h264
 
   # ---- Modelo pras próximas câmeras (Loja 5, Loja 2...) ----
   # Cada câmera CareCam nova: descubra o IP dela, rode o mesmo processo ONVIF
