@@ -89,6 +89,30 @@ O formato muda por marca. Exemplos comuns (porta 554):
   configurar os dois; comece só com um pra validar.
 - Ferramenta útil pra testar a URL: VLC → "Abrir stream de rede".
 
+## Descobrir o RTSP de uma câmera CareCam (via ONVIF)
+
+As CareCam (HMT) **não revelam o caminho RTSP** — testar caminhos no chute não
+funciona (elas devolvem uma sessão vazia pra qualquer path). O jeito certo é
+perguntar via **ONVIF** (porta 8899). Para uma câmera nova, troque `CAM` pelo IP:
+
+```bash
+CAM=192.168.15.12   # IP da câmera nova
+# 1) autentica no ONVIF (admin, senha em branco) e pega os perfis:
+head -c 20 /dev/urandom > /tmp/n.bin; C=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+N=$(base64 -w0 /tmp/n.bin); cat /tmp/n.bin > /tmp/d.bin; printf '%s' "$C" >> /tmp/d.bin
+D=$(openssl dgst -sha1 -binary /tmp/d.bin | base64 -w0)
+for T in 000 001; do
+  curl -s -m 8 "http://$CAM:8899/onvif/device_service" \
+   -H 'Content-Type: application/soap+xml' \
+   -d "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:trt=\"http://www.onvif.org/ver10/media/wsdl\" xmlns:tt=\"http://www.onvif.org/ver10/schema\"><s:Header><Security s:mustUnderstand=\"1\" xmlns=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><UsernameToken><Username>admin</Username><Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">$D</Password><Nonce>$N</Nonce><Created xmlns=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">$C</Created></UsernameToken></Security></s:Header><s:Body><trt:GetStreamUri><trt:StreamSetup><tt:Stream>RTP-Unicast</tt:Stream><tt:Transport><tt:Protocol>RTSP</tt:Protocol></tt:Transport></trt:StreamSetup><trt:ProfileToken>$T</trt:ProfileToken></trt:GetStreamUri></s:Body></s:Envelope>" \
+   | grep -oiE 'rtsp://[^<]+'
+done
+```
+
+Na prática, o padrão dessas câmeras é sempre:
+`rtsp://admin:@IP:554/streamtype=0` (principal) e `.../streamtype=1` (sub).
+Ou seja, pra uma câmera nova, geralmente basta trocar o IP.
+
 ## Adicionar mais câmeras
 
 Em `config/config.yml`:

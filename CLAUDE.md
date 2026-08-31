@@ -48,11 +48,22 @@ Serviços em Docker:
 - Stack isolada. Portas: **8971** (web c/ login), **8554** (RTSP), **8555** (WebRTC) — sem conflito.
 - **Detecção na CPU** (GPU deixada livre pras outras IAs). Bloco de GPU pronto mas desligado.
 - **Limites de recurso definidos:** `mem_limit: 2g`, `cpus: 2.0`, `shm_size: 128mb`, cache tmpfs 256 MB.
-- Câmeras: **RTSP** (senha vem do `.env` via `{FRIGATE_RTSP_PASSWORD}`).
-- Gravação → pasta do **NAS** (`/mnt/nas/frigate` = placeholder, **confirmar caminho real com `df -h`**).
+- Gravação → variável `FRIGATE_STORAGE` no `.env` (padrão `./storage` local; setar pro NAS depois).
+
+### Câmeras — CareCam Pro (marca HMT, WiFi P2P)
+- **App:** CareCam Pro. Firmware `HMT.CM2307`. Várias câmeras (Loja, Loja 5, Loja 2...).
+- **RTSP:** usuário `admin`, **senha em branco**. Caminhos:
+  - `rtsp://admin:@IP:554/streamtype=0` → principal (2304x1296, **H.265**)
+  - `rtsp://admin:@IP:554/streamtype=1` → sub (640x360, **H.265**)
+- ⚠️ Esse caminho **só foi descoberto via ONVIF** (porta 8899, GetStreamUri, auth admin/senha-branco).
+  Testar caminhos RTSP "no chute" NÃO funciona (a câmera devolve SDP vazio pra qualquer path).
+- ⚠️ **H.265** → detecção e gravação OK, mas **ao vivo não toca no Chrome** (só Safari/Edge).
+  Ideal: trocar a câmera pra **H.264** no app (mais leve na CPU também).
+- Câmera "Loja" = `192.168.15.12`. (rede "J"; IPs por DHCP, podem mudar — considerar IP fixo.)
 
 ## Pendências / próximos passos
-- [ ] Descobrir o caminho real do NAS no servidor (`df -h`) e ajustar o volume no `frigate/docker-compose.yml`.
-- [ ] Preencher `frigate/.env` com a senha RTSP da câmera.
-- [ ] Preencher o link RTSP real da(s) câmera(s) em `frigate/config/config.yml` (testar antes no VLC).
-- [ ] Marca/modelo das câmeras: (a definir).
+- [x] Câmera "Loja" configurada no Frigate (RTSP via ONVIF).
+- [ ] Descobrir o caminho real do NAS (`df -h`) e setar `FRIGATE_STORAGE` no `.env`.
+- [ ] Configurar as outras câmeras (Loja 5, Loja 2...) — mesmo processo ONVIF por IP.
+- [ ] (Opcional) Trocar câmeras pra H.264 no app CareCam pra ter ao vivo no Chrome.
+- [ ] (Opcional) Fixar IP das câmeras no roteador (DHCP reservation) pra não mudarem.

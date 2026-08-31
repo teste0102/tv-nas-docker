@@ -2,11 +2,10 @@
 # Frigate — configuração
 # Docs: https://docs.frigate.video/configuration/
 #
-# COMO PREENCHER SUAS CÂMERAS:
-#   1. Descubra o link RTSP de cada câmera (veja o README.md).
-#   2. Copie o bloco de "camera_frente" pra cada câmera, mudando o nome e o path.
-#   3. A senha vem do arquivo .env — use {FRIGATE_RTSP_PASSWORD} no lugar da senha.
-#      Assim a senha não fica escrita aqui (nem vai pro git).
+# CÂMERAS CARECAM (HMT): o link RTSP é /streamtype=0 (principal) e
+# /streamtype=1 (sub), usuário admin sem senha. Esse caminho foi descoberto
+# via ONVIF (porta 8899) — não dá pra adivinhar. Pra achar o de uma câmera
+# nova, veja o passo a passo no README.md ("Descobrir o RTSP via ONVIF").
 # =============================================================================
 
 mqtt:
@@ -31,7 +30,9 @@ ffmpeg:
   # E descomente o bloco "deploy" no docker-compose.yml:
   # hwaccel_args: preset-nvidia
   output_args:
-    record: preset-record-generic-audio-copy
+    # O áudio da câmera vem em PCM a-law; converte pra AAC (senão o MP4 da
+    # gravação pode não tocar/gravar direito).
+    record: preset-record-generic-audio-aac
 
 # -----------------------------------------------------------------------------
 # go2rtc — reencaminha o stream da câmera (evita abrir 2 conexões na câmera:
@@ -39,10 +40,13 @@ ffmpeg:
 # -----------------------------------------------------------------------------
 go2rtc:
   streams:
-    camera_frente:
-      # >>> AJUSTE: usuário, IP e caminho do stream da SUA câmera <<<
-      # A senha vem do .env — mantenha o {FRIGATE_RTSP_PASSWORD}
-      - "rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.15.101:554/cam/realmonitor?channel=1&subtype=0"
+    # Câmera CareCam "Loja" (192.168.15.12). Caminho RTSP descoberto via ONVIF.
+    # Está com senha EM BRANCO (usuário admin, sem senha). Quando você colocar
+    # uma senha na câmera, troque ":@" por ":{FRIGATE_RTSP_PASSWORD}" e preencha o .env.
+    loja:                       # principal: 2304x1296, H.265  -> gravação
+      - "rtsp://admin:@192.168.15.12:554/streamtype=0"
+    loja_sub:                   # substream: 640x360, H.265     -> detecção (leve)
+      - "rtsp://admin:@192.168.15.12:554/streamtype=1"
 
 # -----------------------------------------------------------------------------
 # Padrões aplicados a TODAS as câmeras (pode sobrescrever por câmera)
@@ -71,38 +75,28 @@ objects:
 # CÂMERAS
 # -----------------------------------------------------------------------------
 cameras:
-  camera_frente:                 # nome da câmera (troque à vontade, sem espaços/acentos)
+  loja:
     enabled: true
     ffmpeg:
       inputs:
-        # Puxa do restream do go2rtc (definido acima) — não repete a senha aqui
-        - path: rtsp://127.0.0.1:8554/camera_frente
+        - path: rtsp://127.0.0.1:8554/loja_sub    # substream -> detecção
           input_args: preset-rtsp-restream
           roles:
             - detect
+        - path: rtsp://127.0.0.1:8554/loja         # principal -> gravação
+          input_args: preset-rtsp-restream
+          roles:
             - record
     detect:
       enabled: true
-      width: 1280    # ajuste pra resolução do substream da câmera
-      height: 720
-      fps: 5         # 5 fps é suficiente pra detecção (menos CPU)
+      width: 640      # resolução do substream (streamtype=1)
+      height: 360
+      fps: 5
 
-  # ---- Modelo pra COPIAR pra próxima câmera (descomente e ajuste) ----
-  # camera_fundos:
-  #   enabled: true
-  #   ffmpeg:
-  #     inputs:
-  #       - path: rtsp://127.0.0.1:8554/camera_fundos
-  #         input_args: preset-rtsp-restream
-  #         roles:
-  #           - detect
-  #           - record
-  #   detect:
-  #     width: 1280
-  #     height: 720
-  #     fps: 5
-  #
-  # (e adicione o stream correspondente em go2rtc: -> streams: -> camera_fundos:)
+  # ---- Modelo pras próximas câmeras (Loja 5, Loja 2...) ----
+  # Cada câmera CareCam nova: descubra o IP dela, rode o mesmo processo ONVIF
+  # pra achar o /streamtype=0 e /streamtype=1, e replique este bloco aqui +
+  # os streams lá em cima no go2rtc (ex.: loja5 / loja5_sub).
 
 # Versão do formato de config (não mexa):
 version: 0.14
