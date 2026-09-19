@@ -65,6 +65,17 @@ go2rtc:
     loja5_sub_h264:
       - "ffmpeg:loja5_sub#video=h264"
 
+    # ---- Câmera "Loja 4" (192.168.15.14) — mesma CareCam, mesmo padrão ----
+    # ⚠️ IP .14 assumido pela sequência (.12 Loja, .13 Loja5). Se o IP real
+    # for outro, troque o número aqui e no bloco 'cameras' lá embaixo.
+    # Descobrir: ssh mkinfocell@192.168.15.11 "arp -a | grep '192.168.15'"
+    loja4:
+      - "rtsp://admin:@192.168.15.14:554/streamtype=0"
+    loja4_sub:
+      - "rtsp://admin:@192.168.15.14:554/streamtype=1"
+    loja4_sub_h264:
+      - "ffmpeg:loja4_sub#video=h264"
+
 # -----------------------------------------------------------------------------
 # Padrões aplicados a TODAS as câmeras (pode sobrescrever por câmera)
 # -----------------------------------------------------------------------------
@@ -134,6 +145,26 @@ cameras:
       fps: 5
     live:
       stream_name: loja5_sub_h264
+
+  loja4:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/loja4_sub    # substream -> detecção
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+        - path: rtsp://127.0.0.1:8554/loja4         # principal -> gravação
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+    detect:
+      enabled: true
+      width: 640      # confirme com o ffprobe; ajuste se a resolução do sub diferir
+      height: 360
+      fps: 5
+    live:
+      stream_name: loja4_sub_h264
 
   # ---- Modelo pras próximas câmeras (Loja 2...) ----
   # Cada câmera CareCam nova: descubra o IP dela, rode o mesmo processo ONVIF
