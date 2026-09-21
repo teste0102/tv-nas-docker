@@ -9,3 +9,6 @@ frigate/config/*.db-*
 
 # Modelos de IA e cache do Frigate (binários grandes; gerados no servidor)
 frigate/config/model_cache/
+
+# Config do Double-Take contém API key — não vai pro git
+reconhecimento-facial/config/
