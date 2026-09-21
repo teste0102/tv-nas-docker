@@ -37,9 +37,9 @@ ffmpeg:
   # DECODIFICAÇÃO na GPU (NVDEC) — tira o decode de vídeo da CPU.
   hwaccel_args: preset-nvidia
   output_args:
-    # O áudio da câmera vem em PCM a-law; converte pra AAC (senão o MP4 da
-    # gravação pode não tocar/gravar direito).
-    record: preset-record-generic-audio-aac
+    # Grava em H.264 usando a GPU (h264_nvenc) — toca em qualquer browser.
+    # A câmera envia H.265; a GPU converte pra H.264 na hora da gravação.
+    record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v h264_nvenc -preset p4 -c:a aac
 
 # -----------------------------------------------------------------------------
 # go2rtc — reencaminha o stream da câmera (evita abrir 2 conexões na câmera:
