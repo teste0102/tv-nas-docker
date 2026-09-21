@@ -65,6 +65,14 @@ go2rtc:
     loja5_sub_h264:
       - "ffmpeg:loja5_sub#video=h264"
 
+    # ---- Câmera "Loja 3" (192.168.15.5) — mesma CareCam, mesmo padrão ----
+    loja_3:
+      - rtsp://admin:@192.168.15.5:554/streamtype=0
+    loja_3_sub:
+      - rtsp://admin:@192.168.15.5:554/streamtype=1
+    loja_3_sub_h264:
+      - ffmpeg:loja_3_sub#video=h264
+
     # ---- Câmera "Loja 4" (192.168.15.10) — mesma CareCam, mesmo padrão ----
     loja_4:                     # chave com "_" -> a UI mostra "Loja 4"
       - rtsp://admin:@192.168.15.10:554/streamtype=0
@@ -144,6 +152,27 @@ cameras:
     live:
       streams:
         loja5_sub_h264: loja5_sub_h264
+
+  loja_3:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/loja_3_sub   # substream -> detecção
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+        - path: rtsp://127.0.0.1:8554/loja_3        # principal -> gravação
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    live:
+      streams:
+        loja_3_sub_h264: loja_3_sub_h264
 
   loja_4:
     enabled: true
