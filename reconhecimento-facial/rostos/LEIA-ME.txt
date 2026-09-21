@@ -1,0 +1,19 @@
+COMO CADASTRAR ROSTOS
+=====================
+
+Cada pessoa = uma pasta com o nome dela.
+Dentro da pasta: fotos do rosto (JPG ou PNG), uma foto por arquivo.
+
+Exemplo:
+  rostos/
+    Joao/
+      foto1.jpg
+      foto2.jpg
+    Maria/
+      frente.jpg
+
+DICAS:
+- Use fotos com boa iluminação e rosto de frente
+- Mínimo 3-5 fotos por pessoa pra melhor precisão
+- Após adicionar fotos, cadastre no CompreFace (http://IP:8082)
+  e atualize a API key no config/config.yml

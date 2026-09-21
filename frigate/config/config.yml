@@ -9,7 +9,9 @@
 # =============================================================================
 
 mqtt:
-  enabled: false   # ligue depois se for integrar com Home Assistant
+  enabled: true
+  host: mosquitto   # broker na rede Docker "cameras"
+  port: 1883
 
 # -----------------------------------------------------------------------------
 # DETECÇÃO NA GPU (Nvidia RTX 5060 Ti) — detector ONNX (usa TensorRT na placa).

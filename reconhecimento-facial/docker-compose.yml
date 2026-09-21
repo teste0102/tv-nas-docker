@@ -1,0 +1,67 @@
+services:
+
+  # Double-Take: recebe alertas do Frigate, recorta o rosto e envia pro CompreFace
+  double-take:
+    image: jakowenko/double-take
+    container_name: reconhecimento-facial
+    restart: unless-stopped
+    ports:
+      - "3500:3000"            # acesso: http://IP-DO-SERVIDOR:3500
+    volumes:
+      - ./config:/double-take/.storage/config
+      - ./rostos:/double-take/.storage/faces  # ← FOTOS DAS PESSOAS FICAM AQUI
+      - double-take-db:/double-take/.storage
+    environment:
+      - TZ=America/Sao_Paulo
+    networks:
+      - cameras
+
+  # CompreFace: motor de reconhecimento facial (roda local, sem internet)
+  compreface-postgres:
+    image: postgres:11
+    container_name: compreface-banco
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: compreface
+      POSTGRES_PASSWORD: compreface
+      POSTGRES_DB: compreface
+    volumes:
+      - compreface-db:/var/lib/postgresql/data
+    networks:
+      - cameras
+
+  compreface-core:
+    image: exadel/compreface-core:latest
+    container_name: compreface-core
+    restart: unless-stopped
+    networks:
+      - cameras
+
+  compreface:
+    image: exadel/compreface:latest
+    container_name: compreface
+    restart: unless-stopped
+    ports:
+      - "8082:80"              # interface CompreFace: http://IP-DO-SERVIDOR:8082
+    environment:
+      POSTGRES_USER: compreface
+      POSTGRES_PASSWORD: compreface
+      POSTGRES_URL: jdbc:postgresql://compreface-banco:5432/compreface
+      SPRING_PROFILES_ACTIVE: dev
+      ENABLE_EMAIL_SERVER: "false"
+      EMAIL_HOST: mailhog
+      ADMIN_JAVA_OPTS: -Xmx8g
+    depends_on:
+      - compreface-postgres
+      - compreface-core
+    networks:
+      - cameras
+
+networks:
+  cameras:
+    name: cameras
+    external: true
+
+volumes:
+  double-take-db:
+  compreface-db:

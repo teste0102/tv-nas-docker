@@ -1,0 +1,41 @@
+mqtt:
+  host: mosquitto
+  port: 1883
+
+frigate:
+  url: http://frigate:8971
+
+  # Câmeras que o Double-Take vai monitorar
+  cameras:
+    - loja
+    - loja5
+    - loja_3
+    - loja_4
+
+  # Só processa detecções de "person"
+  labels:
+    - person
+
+  # Tamanho mínimo do rosto pra tentar reconhecer (evita falsos positivos)
+  min_area: 10000
+
+compreface:
+  url: http://compreface
+  det_prob_threshold: 0.8
+
+  # Chave de API criada na interface do CompreFace (http://IP:8082)
+  # Depois de criar o serviço "reconhecimento" no CompreFace, cole a API key aqui:
+  # key: COLE-SUA-API-KEY-AQUI
+
+  unknown_threshold: 0.65  # abaixo disso = "desconhecido"
+
+# Guarda os recortes dos rostos detectados (útil pra treinar novos rostos)
+snapshot:
+  save_unknown: true        # salva rostos desconhecidos pra você identificar depois
+
+# Tolerância de detecções duplicadas (em segundos)
+detect:
+  match:
+    save: true
+  unknown:
+    save: true
