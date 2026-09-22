@@ -1,0 +1,27 @@
+mqtt:
+  host: mosquitto
+  port: 1883
+
+frigate:
+  url: http://frigate:5000    # porta interna HTTP (não a 8971 que é HTTPS)
+  cameras:
+    - loja
+    - loja5
+    - loja_3
+    - loja_4
+  labels:
+    - person
+  min_area: 3000              # área mínima do bounding box; 3000 pega pessoas mais distantes
+
+detectors:
+  compreface:
+    url: http://compreface
+    key: COLE_AQUI_A_CHAVE_DO_SERVICO_DE_RECONHECIMENTO  # recognition service key
+    det_prob_threshold: 0.8
+    unknown_threshold: 0.65
+
+detect:
+  match:
+    save: true
+  unknown:
+    save: true
