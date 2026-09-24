@@ -67,11 +67,11 @@ go2rtc:
     loja5_sub_h264:
       - "ffmpeg:loja5_sub#video=h264"
 
-    # ---- Câmera "Loja 3" (192.168.15.5) — mesma CareCam, mesmo padrão ----
+    # ---- Câmera "Loja 3" (192.168.15.19) — mesma CareCam, mesmo padrão ----
     loja_3:
-      - rtsp://admin:@192.168.15.5:554/streamtype=0
+      - rtsp://admin:@192.168.15.19:554/streamtype=0
     loja_3_sub:
-      - rtsp://admin:@192.168.15.5:554/streamtype=1
+      - rtsp://admin:@192.168.15.19:554/streamtype=1
     loja_3_sub_h264:
       - ffmpeg:loja_3_sub#video=h264
 
