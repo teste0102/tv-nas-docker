@@ -110,6 +110,17 @@ objects:
     - car
 
 # -----------------------------------------------------------------------------
+# RECONHECIMENTO FACIAL NATIVO (Frigate 0.18)
+# Modelo "small" roda na CPU (FaceNet). Rostos são cadastrados pela UI:
+# https://IP:8971 → Settings → Enrichments → Face Library → "Add Face"
+# -----------------------------------------------------------------------------
+face_recognition:
+  enabled: true
+  min_area: 500             # área mínima do rosto em pixels (padrão ~500)
+  unknown_score: 0.8        # abaixo disso = desconhecido
+  recognition_threshold: 0.9
+
+# -----------------------------------------------------------------------------
 # CÂMERAS
 # -----------------------------------------------------------------------------
 cameras:
