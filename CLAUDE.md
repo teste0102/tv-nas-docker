@@ -16,6 +16,27 @@ Cada serviço novo entra como **stack Docker isolada** (pasta própria com seu
 - **Pasta do projeto no servidor:** `~/tv-nas-docker` (clonado do GitHub)
 - **Idioma do usuário:** Português (responder sempre em PT-BR)
 
+## Como o usuário trabalha (rede)
+
+- O servidor fica numa rede local e **não tem acesso à internet externa**
+  (não dá pra baixar nada direto nele: apt, wget, git pull do GitHub etc.).
+- O usuário passa a maior parte do tempo em **terminais Windows** da mesma rede
+  e só acessa o servidor pela rede local (SSH/web). Raramente está fisicamente no servidor.
+- Portanto: dar comandos **para Windows (cmd/PowerShell)** por padrão; downloads
+  são feitos no terminal Windows e levados ao servidor por `scp`/pasta de rede.
+  Só dar comando Linux quando for rodar no servidor via SSH.
+
+## Ferramentas de disco (Seagate ST500LT012, serial W0VB30JD)
+
+- Ferramenta: **openSeaChest** (Windows em `C:\IA_@\openseachest\`, cmd como Administrador).
+  Identificar o disco com `openSeaChest_PowerControl.exe --scan` (aparece como `PD1`, `PD2`...;
+  conferir modelo/serial antes de qualquer comando).
+- Ajustes gravados no firmware do disco (persistem entre SOs): `--EPCfeature disable`
+  (PowerControl), APM 254 (Configure), `--setMaxLBA` / `--restoreMaxLBA` (HPA).
+  Confirmar nomes exatos das flags com `--help` da versão baixada.
+- Realocação de setores: pass de escrita na Victoria (**destrói dados** — clonar antes).
+- No Windows: Opções de Energia → desativar disco após = 0 e desligar desfragmentação agendada.
+
 ## Hardware
 
 - **GPU:** 16 GB de VRAM — **roda UMA IA pesada por vez**. Serviços de IA
