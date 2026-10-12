@@ -65,11 +65,11 @@ go2rtc:
     loja5_sub_h264:
       - ffmpeg:loja5_sub#video=h264
 
-    # ---- Câmera "Loja 4" (192.168.15.16) — mesma CareCam, mesmo padrão ----
+    # ---- Câmera "Loja 4" (192.168.15.14) — MAC a0:ac:78:23:dd:8e ----
     loja_4:                     # chave com "_" -> a UI mostra "Loja 4"
-      - rtsp://admin:@192.168.15.16:554/streamtype=0
+      - rtsp://admin:@192.168.15.14:554/streamtype=0
     loja_4_sub:
-      - rtsp://admin:@192.168.15.16:554/streamtype=1
+      - rtsp://admin:@192.168.15.14:554/streamtype=1
     loja_4_sub_h264:
       - ffmpeg:loja_4_sub#video=h264
 
